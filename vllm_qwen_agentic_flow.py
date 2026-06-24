@@ -198,17 +198,17 @@ class AgriInferenceEngine:
         return [max(0, min(1000, v)) for v in bbox]
 
     def classify_crop(self, image: Image.Image, crops: List[str]) -> Dict:
+        image_b64 = self._to_base64(image, max_side=448)
+        prompt = (
+            f"{SYSTEM}\nTask: What crop is in this image?\n"
+            f"Valid: {', '.join(crops)}\n"
+            f"Schema: {self.crop_parser.get_format_instructions()}"
+        )
+        raw = self._infer(image_b64, prompt, max_new_tokens=25)
         try:
-            image_b64 = self._to_base64(image, max_side=448)
-            prompt = (
-                f"{SYSTEM}\nTask: What crop is in this image?\n"
-                f"Valid: {', '.join(crops)}\n"
-                f"Schema: {self.crop_parser.get_format_instructions()}"
-            )
-            raw = self._infer(image_b64, prompt, max_new_tokens=25)
             return self.crop_parser.parse(raw)
-        except Exception as e:
-            print(f"[AgriInferenceEngine] classify_crop failed: {e}")
+        except Exception as parse_err:
+            print(f"[AgriInferenceEngine] classify_crop parse failed (raw: {raw}): {parse_err}")
             return {"crop": "unknown"}
 
     def detect_pest(self, image: Image.Image, crop: str, pests: List[str]) -> Dict:
@@ -359,14 +359,18 @@ class AgriGraphSystem:
 
     def classifier_node(self, state: AgentState) -> Dict:
         t         = time.time()
-        res       = self.engine.classify_crop(state["image_obj"], list(self.kb.crops.keys()))
-        crop_name = res.get("crop", "").lower().strip()
-        knowledge = self.kb.get_crop_knowledge(crop_name)
-        print(f"[Classifier] {crop_name} | {time.time()-t:.2f}s")
+        try:
+            res       = self.engine.classify_crop(state["image_obj"], list(self.kb.crops.keys()))
+            crop_name = res.get("crop", "").lower().strip()
+            knowledge = self.kb.get_crop_knowledge(crop_name)
+            print(f"[Classifier] {crop_name} | {time.time()-t:.2f}s")
 
-        if knowledge:
-            return {"crop_name": crop_name, "crop_knowledge": knowledge, "status": "analyzing", "encoded_inputs": None}
-        return {"status": "error", "error": f"Crop '{crop_name}' not in knowledge base."}
+            if knowledge:
+                return {"crop_name": crop_name, "crop_knowledge": knowledge, "status": "analyzing", "encoded_inputs": None}
+            return {"status": "error", "error": f"Crop '{crop_name}' not in knowledge base."}
+        except Exception as e:
+            print(f"[Classifier] Failed to classify crop: {e}")
+            return {"status": "error", "error": f"Failed to classify crop: {str(e)}"}
 
     def parallel_detection_node(self, state: AgentState) -> Dict:
         if state.get("status") == "error":
