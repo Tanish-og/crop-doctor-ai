@@ -76,20 +76,20 @@ class ModelRepository:
     def __init__(self):
         self._paths: Dict[str, Dict[str, str]] = {
             "paddy": {
-                "pest":    "/media/rajesh/OneTouch/pest_v1/pest_cd_ci/yolo_data/paddy/qwen_attachments3/weights/last.pt",
-                "disease": "/home/rajesh/Downloads/weights/paddy_disease_fs_blb_sb_nano.pt",
+                "pest":    "yolo_weights/paddy_pest.pt",
+                "disease": "yolo_weights/paddy_disease.pt",
             },
             "maize": {
-                "pest":    "/home/rajesh/Downloads/weights/Maize_Pest_best_nano(1).pt",
+                "pest":    "yolo_weights/maize_pest.pt",
                 "disease": None,
             },
             "cotton": {
-                "pest":    "/media/rajesh/OneTouch/pest_v1/pest_cd_ci/yolo_data/cotton/models/verison1/weights/cotton_pest_nano_v1.pt",
+                "pest":    "yolo_weights/cotton_pest.pt",
                 "disease": None,
             },
             "banana": {
-                "pest":    "/home/rajesh/Downloads/weights/banana_pest_best_nano.pt",
-                "disease": "/media/rajesh/OneTouch/pest_v1/pest_cd_ci/yolo_data/banana/models/verison1_nano/weights/banana_disease_best_nano.pt",
+                "pest":    "yolo_weights/banana_pest.pt",
+                "disease": "yolo_weights/banana_disease.pt",
             },
         }
         self._cache: Dict[str, YOLO] = {}
