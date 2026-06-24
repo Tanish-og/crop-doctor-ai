@@ -1,0 +1,12 @@
+# Ignore local python cache
+__pycache__/
+*.pyc
+
+# Ignore heavy Qwen LLM model weights (too large for GitHub)
+weights/
+
+# Ignore local configuration files
+.DS_Store
+.env
+.venv/
+.streamlit/
